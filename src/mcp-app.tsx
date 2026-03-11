@@ -4,7 +4,7 @@
 import type { App, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { useApp } from "@modelcontextprotocol/ext-apps/react";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { StrictMode, useCallback, useEffect, useState } from "react";
+import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import styles from "./mcp-app.module.css";
 
@@ -18,8 +18,11 @@ export interface QuizQuestion {
 }
 
 export interface QuizPayload {
-  step?: "selectDifficulty";
+  step?: "selectDifficulty" | "results";
   questions?: QuizQuestion[];
+  correctCount?: number;
+  totalCount?: number;
+  illustration?: string;
 }
 
 function parseQuizPayload(callToolResult: CallToolResult): QuizPayload | null {
@@ -92,45 +95,71 @@ interface QuizAppInnerProps {
 }
 
 function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppInnerProps) {
-  const payload = toolResult ? parseQuizPayload(toolResult) : null;
-  const questions = payload?.questions ?? null;
-  const step = payload?.step;
-  const showDifficultyPicker =
-    toolResult == null || step === "selectDifficulty";
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<number, { chosen: number; correct: boolean }>>({});
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
+  const resultsRequestSentRef = useRef(false);
 
-  const fetchQuizWithDifficulty = useCallback(
+  const payload = toolResult ? parseQuizPayload(toolResult) : null;
+  const questions = payload?.questions ?? null;
+  const step = payload?.step;
+  const showDifficultyPicker =
+    toolResult == null || step === "selectDifficulty";
+  const showResultsView = step === "results";
+
+  useEffect(() => {
+    if (loading && toolResult) {
+      const p = parseQuizPayload(toolResult);
+      const hasQuestions = p?.questions != null;
+      const hasError = (p as { error?: unknown })?.error != null || (toolResult as { isError?: boolean })?.isError === true;
+      if (hasQuestions || hasError) {
+        setLoading(false);
+      }
+    }
+  }, [loading, toolResult]);
+
+  useEffect(() => {
+    if (!finished || !questions?.length || resultsRequestSentRef.current || !app) return;
+    const correctCount = Object.values(answers).filter((a) => a.correct).length;
+    const totalCount = questions.length;
+    resultsRequestSentRef.current = true;
+    app.sendMessage({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `The user just completed the MCP quiz with **${correctCount} / ${totalCount}** correct. Generate a short, rewarding illustration (single image) based on how well they did: celebrate a strong score, or encourage them gently for a lower score. Then call the **mcp-quiz** tool with: \`step\` "results", \`correctCount\` ${correctCount}, \`totalCount\` ${totalCount}, and \`illustration\` as a data URL (e.g. \`data:image/png;base64,...\`) or base64 string of the image so it appears in the quiz UI.`,
+        },
+      ],
+    }).catch(console.error);
+  }, [finished, questions?.length, answers, app]);
+
+  const handleSelectDifficulty = useCallback(
     async (difficulty: QuizDifficulty) => {
       setLoading(true);
+      setToolResult(null);
+      setCurrentIndex(0);
+      setSelectedOption(null);
+      setAnswers({});
+      setFinished(false);
       try {
-        const result = await app.callServerTool({
-          name: "mcp-quiz",
-          arguments: { difficulty },
+        await app.sendMessage({
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `The user selected quiz difficulty: **${difficulty}**. Generate 5 new quiz questions about the Model Context Protocol (MCP) for ${difficulty} difficulty. Then call the **mcp-quiz** tool with exactly two arguments: \`difficulty\` (string "${difficulty}") and \`questions\` (array of 5 objects). Each question must have: \`id\` (string, e.g. "q1"), \`question\` (string), \`options\` (array of exactly 4 strings), \`correctIndex\` (number 0–3). Call the tool so the questions appear in the quiz UI.`,
+            },
+          ],
         });
-        setToolResult(result);
-        setCurrentIndex(0);
-        setSelectedOption(null);
-        setAnswers({});
-        setFinished(false);
       } catch (e) {
         console.error(e);
-      } finally {
         setLoading(false);
       }
     },
     [app, setToolResult],
-  );
-
-  const handleSelectDifficulty = useCallback(
-    (difficulty: QuizDifficulty) => {
-      fetchQuizWithDifficulty(difficulty);
-    },
-    [fetchQuizWithDifficulty],
   );
 
   const handleSubmitAnswer = useCallback(() => {
@@ -147,6 +176,7 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
   }, [questions, currentIndex, selectedOption]);
 
   const handleRestart = useCallback(() => {
+    resultsRequestSentRef.current = false;
     setToolResult(null);
     setCurrentIndex(0);
     setSelectedOption(null);
@@ -170,7 +200,7 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
       <main className={styles.main} style={safeAreaStyle}>
         <p className={styles.intro}>Test your MCP knowledge</p>
         <div className={styles.action}>
-          <p>Loading quiz...</p>
+          <p>Generating questions… The agent will create a quiz and it will appear here.</p>
         </div>
       </main>
     );
@@ -185,6 +215,35 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
           <button onClick={() => handleSelectDifficulty("easy")}>Easy</button>
           <button onClick={() => handleSelectDifficulty("medium")}>Medium</button>
           <button onClick={() => handleSelectDifficulty("hard")}>Hard</button>
+        </div>
+        <div className={styles.action}>
+          <button onClick={handleOpenMcpDocs}>Open MCP docs</button>
+        </div>
+      </main>
+    );
+  }
+
+  if (showResultsView && payload?.correctCount != null && payload?.totalCount != null) {
+    const correctCount = payload.correctCount;
+    const totalCount = payload.totalCount;
+    const illustration = payload.illustration
+      ? payload.illustration.startsWith("data:")
+        ? payload.illustration
+        : `data:image/png;base64,${payload.illustration}`
+      : null;
+    return (
+      <main className={styles.main} style={safeAreaStyle}>
+        <h2 className={styles.scoreHeading}>Quiz complete</h2>
+        <p className={styles.score}>
+          You got <strong>{correctCount} / {totalCount}</strong> correct.
+        </p>
+        {illustration ? (
+          <div className={styles.resultsIllustration}>
+            <img src={illustration} alt="Reward" className={styles.resultsImage} />
+          </div>
+        ) : null}
+        <div className={styles.action}>
+          <button onClick={handleRestart}>Restart quiz</button>
         </div>
         <div className={styles.action}>
           <button onClick={handleOpenMcpDocs}>Open MCP docs</button>
@@ -209,19 +268,11 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
   }
 
   if (finished) {
-    const correctCount = Object.values(answers).filter((a) => a.correct).length;
-    const total = questions.length;
     return (
       <main className={styles.main} style={safeAreaStyle}>
-        <h2 className={styles.scoreHeading}>Quiz complete</h2>
-        <p className={styles.score}>
-          You got <strong>{correctCount} / {total}</strong> correct.
-        </p>
+        <p className={styles.intro}>Test your MCP knowledge</p>
         <div className={styles.action}>
-          <button onClick={handleRestart}>Restart quiz</button>
-        </div>
-        <div className={styles.action}>
-          <button onClick={handleOpenMcpDocs}>Open MCP docs</button>
+          <p>Generating your reward… The agent will create an illustration based on your score.</p>
         </div>
       </main>
     );
