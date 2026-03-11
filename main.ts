@@ -1,7 +1,7 @@
 /**
- * Entry point for running the MCP server.
- * Run with: npx @modelcontextprotocol/server-basic-react
- * Or: node dist/index.js [--stdio]
+ * Entry point for running the MCP Quiz server.
+ * Run with: node dist/index.js [--stdio]
+ * Or from repo: npm run serve:stdio
  */
 
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";

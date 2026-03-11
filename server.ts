@@ -23,7 +23,7 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
  */
 export function createServer(): McpServer {
   const server = new McpServer({
-    name: "Basic MCP App Server (React)",
+    name: "MCP Quiz",
     version: "1.0.0",
   });
 

@@ -1,18 +1,17 @@
 {
-  "name": "@modelcontextprotocol/server-basic-react",
-  "version": "1.2.2",
+  "name": "mcp-quiz",
+  "version": "1.0.0",
   "type": "module",
-  "description": "Basic MCP App Server example using React",
+  "description": "MCP App that provides an interactive quiz",
   "repository": {
     "type": "git",
-    "url": "https://github.com/modelcontextprotocol/ext-apps",
-    "directory": "examples/basic-server-react"
+    "url": "https://github.com/glennreyes/mcp-quiz"
   },
   "license": "MIT",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "bin": {
-    "mcp-server-basic-react": "dist/index.js"
+    "mcp-quiz": "dist/index.js"
   },
   "files": [
     "dist"
