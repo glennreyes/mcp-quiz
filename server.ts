@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { MCP_QUIZ_QUESTIONS } from "./quiz-data.js";
 
 // Works both from source (server.ts) and compiled (dist/server.js)
@@ -30,11 +31,21 @@ export function createServer(): McpServer {
     {
       title: "MCP Quiz",
       description: "Start an interactive quiz about the Model Context Protocol (MCP).",
-      inputSchema: {},
+      inputSchema: {
+        difficulty: z
+          .enum(["easy", "medium", "hard"])
+          .optional()
+          .describe("Quiz difficulty level. Omit to show the difficulty picker."),
+      },
       _meta: { ui: { resourceUri } }, // Links this tool to its UI resource
     },
-    async (): Promise<CallToolResult> => {
-      const payload = JSON.stringify({ questions: MCP_QUIZ_QUESTIONS });
+    async (args: { difficulty?: "easy" | "medium" | "hard" }): Promise<CallToolResult> => {
+      if (args?.difficulty == null) {
+        const payload = JSON.stringify({ step: "selectDifficulty" });
+        return { content: [{ type: "text", text: payload }] };
+      }
+      const questions = MCP_QUIZ_QUESTIONS.filter((q) => q.difficulty === args.difficulty);
+      const payload = JSON.stringify({ questions });
       return { content: [{ type: "text", text: payload }] };
     },
   );

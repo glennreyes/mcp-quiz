@@ -2,11 +2,14 @@
  * Static quiz questions about MCP (Model Context Protocol).
  */
 
+export type QuizDifficulty = "easy" | "medium" | "hard";
+
 export interface QuizQuestion {
   id: string;
   question: string;
   options: string[];
   correctIndex: number;
+  difficulty: QuizDifficulty;
 }
 
 export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -20,6 +23,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "Model Configuration Protocol",
     ],
     correctIndex: 0,
+    difficulty: "easy",
   },
   {
     id: "q2",
@@ -31,6 +35,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "Only resources",
     ],
     correctIndex: 1,
+    difficulty: "medium",
   },
   {
     id: "q3",
@@ -42,6 +47,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "gRPC",
     ],
     correctIndex: 2,
+    difficulty: "easy",
   },
   {
     id: "q4",
@@ -53,6 +59,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "gRPC streaming",
     ],
     correctIndex: 2,
+    difficulty: "medium",
   },
   {
     id: "q5",
@@ -64,6 +71,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "Storing session state",
     ],
     correctIndex: 1,
+    difficulty: "medium",
   },
   {
     id: "q6",
@@ -75,6 +83,7 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "Authentication only",
     ],
     correctIndex: 1,
+    difficulty: "medium",
   },
   {
     id: "q7",
@@ -86,5 +95,42 @@ export const MCP_QUIZ_QUESTIONS: QuizQuestion[] = [
       "The browser only",
     ],
     correctIndex: 2,
+    difficulty: "hard",
+  },
+  {
+    id: "q8",
+    question: "How does a client typically discover MCP server capabilities?",
+    options: [
+      "By reading a config file only",
+      "Through an initial handshake (initialize request)",
+      "By probing each endpoint",
+      "Capabilities are fixed and documented externally",
+    ],
+    correctIndex: 1,
+    difficulty: "easy",
+  },
+  {
+    id: "q9",
+    question: "Can an MCP server expose both tools and resources?",
+    options: [
+      "No, it must choose one",
+      "Yes, a server can expose any combination",
+      "Only if using HTTP transport",
+      "Only tools are allowed with resources",
+    ],
+    correctIndex: 1,
+    difficulty: "hard",
+  },
+  {
+    id: "q10",
+    question: "When a tool call fails on the server, how is the client informed?",
+    options: [
+      "The connection is closed",
+      "An error response is returned in the JSON-RPC reply",
+      "The client must poll for status",
+      "Tools cannot fail",
+    ],
+    correctIndex: 1,
+    difficulty: "hard",
   },
 ];

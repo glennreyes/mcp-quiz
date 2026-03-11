@@ -8,6 +8,8 @@ import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import styles from "./mcp-app.module.css";
 
+export type QuizDifficulty = "easy" | "medium" | "hard";
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -15,12 +17,16 @@ export interface QuizQuestion {
   correctIndex: number;
 }
 
-function parseQuizResult(callToolResult: CallToolResult): QuizQuestion[] | null {
+export interface QuizPayload {
+  step?: "selectDifficulty";
+  questions?: QuizQuestion[];
+}
+
+function parseQuizPayload(callToolResult: CallToolResult): QuizPayload | null {
   const textContent = callToolResult.content?.find((c) => c.type === "text");
   if (!textContent || textContent.type !== "text") return null;
   try {
-    const data = JSON.parse(textContent.text) as { questions?: QuizQuestion[] };
-    return data.questions ?? null;
+    return JSON.parse(textContent.text) as QuizPayload;
   } catch {
     return null;
   }
@@ -86,7 +92,11 @@ interface QuizAppInnerProps {
 }
 
 function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppInnerProps) {
-  const questions = toolResult ? parseQuizResult(toolResult) : null;
+  const payload = toolResult ? parseQuizPayload(toolResult) : null;
+  const questions = payload?.questions ?? null;
+  const step = payload?.step;
+  const showDifficultyPicker =
+    toolResult == null || step === "selectDifficulty";
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -94,28 +104,34 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If we have no questions yet, allow fetching via tool call
-  const fetchQuiz = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await app.callServerTool({ name: "mcp-quiz", arguments: {} });
-      setToolResult(result);
-      setCurrentIndex(0);
-      setSelectedOption(null);
-      setAnswers({});
-      setFinished(false);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [app, setToolResult]);
+  const fetchQuizWithDifficulty = useCallback(
+    async (difficulty: QuizDifficulty) => {
+      setLoading(true);
+      try {
+        const result = await app.callServerTool({
+          name: "mcp-quiz",
+          arguments: { difficulty },
+        });
+        setToolResult(result);
+        setCurrentIndex(0);
+        setSelectedOption(null);
+        setAnswers({});
+        setFinished(false);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [app, setToolResult],
+  );
 
-  useEffect(() => {
-    if (!questions && !loading && app) {
-      fetchQuiz();
-    }
-  }, [questions, loading, app, fetchQuiz]);
+  const handleSelectDifficulty = useCallback(
+    (difficulty: QuizDifficulty) => {
+      fetchQuizWithDifficulty(difficulty);
+    },
+    [fetchQuizWithDifficulty],
+  );
 
   const handleSubmitAnswer = useCallback(() => {
     if (questions == null || selectedOption === null) return;
@@ -136,8 +152,7 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
     setSelectedOption(null);
     setAnswers({});
     setFinished(false);
-    fetchQuiz();
-  }, [fetchQuiz, setToolResult]);
+  }, [setToolResult]);
 
   const handleOpenMcpDocs = useCallback(async () => {
     await app.openLink({ url: "https://modelcontextprotocol.io/" });
@@ -150,12 +165,29 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
     paddingLeft: hostContext?.safeAreaInsets?.left,
   };
 
-  if (loading || (!questions && !toolResult)) {
+  if (loading) {
     return (
       <main className={styles.main} style={safeAreaStyle}>
         <p className={styles.intro}>Test your MCP knowledge</p>
         <div className={styles.action}>
           <p>Loading quiz...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (showDifficultyPicker) {
+    return (
+      <main className={styles.main} style={safeAreaStyle}>
+        <p className={styles.intro}>Test your MCP knowledge</p>
+        <h2 className={styles.scoreHeading}>Choose difficulty</h2>
+        <div className={styles.difficultyPicker}>
+          <button onClick={() => handleSelectDifficulty("easy")}>Easy</button>
+          <button onClick={() => handleSelectDifficulty("medium")}>Medium</button>
+          <button onClick={() => handleSelectDifficulty("hard")}>Hard</button>
+        </div>
+        <div className={styles.action}>
+          <button onClick={handleOpenMcpDocs}>Open MCP docs</button>
         </div>
       </main>
     );
@@ -167,7 +199,7 @@ function QuizAppInner({ app, toolResult, hostContext, setToolResult }: QuizAppIn
         <p className={styles.intro}>Test your MCP knowledge</p>
         <div className={styles.action}>
           <p>Could not load questions.</p>
-          <button onClick={fetchQuiz} disabled={loading}>Retry</button>
+          <button onClick={() => setToolResult(null)}>Choose difficulty again</button>
         </div>
         <div className={styles.action}>
           <button onClick={handleOpenMcpDocs}>Open MCP docs</button>

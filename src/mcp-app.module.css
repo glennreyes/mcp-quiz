@@ -146,6 +146,16 @@
   margin: 0 0 var(--spacing-sm) 0;
 }
 
+.difficultyPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.difficultyPicker button {
+  width: 100%;
+}
+
 .score {
   margin: 0;
   font-size: var(--font-text-md-size);
