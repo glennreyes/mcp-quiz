@@ -28,7 +28,7 @@ An MCP App that provides an interactive quiz with a React UI.
 
 4. Save and **reload** MCP (or restart Cursor).
 
-You can also add it via the UI: **Add New MCP Server** → enter command `bash`, args as above, transport **stdio**.
+You can also add it via the UI: **Add New MCP Server** → set the MCP server to command `bash`, args as above, transport **stdio**.
 
 ### VS Code
 
@@ -52,15 +52,15 @@ You can also add it via the UI: **Add New MCP Server** → enter command `bash`,
 
 3. Save the file. The server will be available in Copilot Chat and other MCP-aware features.
 
-To add via UI: Command Palette → **MCP: Add Server**, then choose stdio and enter command/args.
+To add via UI: Command Palette → **MCP: Add Server**, then choose stdio and enter the MCP server command and args.
 
 ### Running from npm (if published)
 
-If the package is installed globally or via `npx`:
+If the package is installed globally or via `npx`, configure the MCP server as follows:
 
-**Cursor** — use `"command": "npx"` and `"args": ["-y", "mcp-quiz", "--stdio"]`.
+**Cursor** — MCP server with `"command": "npx"` and `"args": ["-y", "mcp-quiz", "--stdio"]`.
 
-**VS Code** — use `"type": "stdio"`, `"command": "npx"`, `"args": ["-y", "mcp-quiz", "--stdio"]`.
+**VS Code** — MCP server with `"type": "stdio"`, `"command": "npx"`, `"args": ["-y", "mcp-quiz", "--stdio"]`.
 
 ## Overview
 
