@@ -4,6 +4,8 @@
 
 An MCP App that provides an interactive quiz with a React UI.
 
+**Workshop:** [Building Interactive Chat Interfaces with MCP-UI](https://speakerdeck.com/glennreyes/dutch-ai-conference-building-interactive-chat-interfaces-with-mcp-ui) — Dutch AI Conference, Amsterdam (March 11, 2026).
+
 ## MCP Client Configuration
 
 The MCP server can be used in two ways: **HTTP** (server runs locally in a terminal; Cursor/VS Code connect to it) or **stdio** (Cursor/VS Code start the process). The HTTP variant is recommended for local development.
@@ -131,3 +133,9 @@ npm run dev
 ## Build System
 
 The app bundles into a single HTML file using Vite with `vite-plugin-singlefile` — see [`vite.config.ts`](vite.config.ts). This allows all UI content to be served as a single MCP resource. Alternatively, MCP apps can load external resources by defining [`_meta.ui.csp.resourceDomains`](https://apps.extensions.modelcontextprotocol.io/api/interfaces/app.McpUiResourceCsp.html#resourcedomains) in the UI resource metadata.
+
+## References
+
+- **[Model Context Protocol (MCP)](https://modelcontextprotocol.io)** — Official site and [specification](https://modelcontextprotocol.io/specification/latest)
+- **[MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps)** — Interactive UIs for MCP tools (docs and [API](https://modelcontextprotocol.github.io/ext-apps/api/))
+- **[MCP-UI](https://mcpui.dev/)** — [Introduction to MCP-UI](https://mcpui.dev/guide/introduction.html) and tooling for building interactive chat interfaces with MCP
