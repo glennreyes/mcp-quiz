@@ -1,0 +1,152 @@
+.main {
+  width: 100%;
+  max-width: 425px;
+  box-sizing: border-box;
+
+  > * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  > * + * {
+    margin-top: var(--spacing-lg);
+  }
+}
+
+.action {
+  > * {
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
+  }
+
+  > * + * {
+    margin-top: var(--spacing-sm);
+  }
+
+  /* Server time row: flex layout for consistent mask width in E2E tests */
+  > p {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+  }
+
+  /* Consistent font for form inputs (inherits from global.css) */
+  textarea,
+  input {
+    display: block;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-on-accent);
+    font-weight: var(--font-weight-bold);
+    background-color: var(--color-accent);
+    cursor: pointer;
+
+    &:hover {
+      background-color: color-mix(in srgb, var(--color-accent) 85%, var(--color-background-inverse));
+    }
+
+    &:focus-visible {
+      outline: calc(var(--border-width-regular) * 2) solid var(--color-ring-primary);
+      outline-offset: var(--border-width-regular);
+    }
+  }
+}
+
+.notice {
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text-info);
+  text-align: center;
+  font-style: italic;
+  background-color: var(--color-background-info);
+
+  &::before {
+    content: "ℹ️ ";
+    font-style: normal;
+  }
+}
+
+/* Server time fills remaining width for consistent E2E screenshot masking */
+.serverTime {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Quiz styles */
+.intro {
+  font-size: var(--font-heading-md-size);
+  line-height: var(--font-heading-md-line-height);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.progress {
+  color: var(--color-text-info);
+  font-size: var(--font-heading-sm-size);
+  margin: 0;
+}
+
+.questionBlock {
+  margin: 0;
+}
+
+.questionText {
+  font-size: var(--font-heading-lg-size);
+  line-height: var(--font-heading-lg-line-height);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.optionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.optionsList > li {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.optionLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border: var(--border-width-regular) solid transparent;
+}
+
+.optionLabel:hover {
+  background-color: var(--color-background-info);
+}
+
+.optionLabel:has(:focus-visible) {
+  outline: calc(var(--border-width-regular) * 2) solid var(--color-ring-primary);
+  outline-offset: var(--border-width-regular);
+}
+
+.optionRadio {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+
+.optionText {
+  flex: 1;
+}
+
+.scoreHeading {
+  font-size: var(--font-heading-xl-size);
+  line-height: var(--font-heading-xl-line-height);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.score {
+  margin: 0;
+  font-size: var(--font-text-md-size);
+}
